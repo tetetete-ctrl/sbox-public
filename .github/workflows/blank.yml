@@ -1,0 +1,43 @@
+name: slop
+
+on:
+  workflow_dispatch:      
+  push:
+    branches: [master]  
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: true
+          submodules: recursive
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Bootstrap 
+        shell: cmd
+        run: Setup.bat
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbox-windows-${{ github.sha }}
+          path: game/
+          retention-days: 7
+          if-no-files-found: error
